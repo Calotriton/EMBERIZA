@@ -1,0 +1,30 @@
+EMBERIZA
+A browser interface for bacpipe.
+
+This product includes software developed by the bacpipe authors
+(https://github.com/bioacoustic-ai/bacpipe), licensed under the Apache License, Version 2.0.
+
+  bacpipe: A Python package to make bioacoustic deep learning models accessible.
+  Vincent S. Kather, Sylvain Haupert, Burooj Ghani and Dan Stowell (2026).
+  Methods in Ecology and Evolution. doi:10.1111/2041-210X.70406
+
+The folder app/py/bacpipe/ holds files of bacpipe 1.3.5, copied unchanged from commit
+d7aa3a2971ae4287c9f4a10acde324519776296a. app/py/bacpipe/VENDORED.json lists each file with its SHA-256.
+The copy is a subset: the 25 other models, the tests, the example notebooks, the type stubs and the logo
+images are left out. No file in that folder is modified. bacpipe's own licence is app/py/bacpipe/LICENSE.
+
+Changes made by EMBERIZA, all outside that folder:
+  - bacpipe's pipeline is driven step by step (app/py/emberiza/engine.py) so that the neural networks can run in
+    ONNX Runtime Web. The calls, their order and their arguments are those of bacpipe.play().
+  - Libraries that cannot be installed in a browser are replaced by stand-ins that do what bacpipe needs from
+    them (app/py/shims/, app/py/emberiza/replay.py).
+  - Six bacpipe functions that only draw picture files are replaced by functions that do nothing
+    (the list DRAWING_ONLY in app/py/emberiza/engine.py).
+
+app/py/emberiza/umap_port.py is a port of parts of umap-learn 0.5.12
+(https://github.com/lmcinnes/umap), Copyright (c) 2017, Leland McInnes, BSD 3-Clause License.
+The licence text is in LICENSES.md.
+
+app/coi-serviceworker.min.js is coi-serviceworker v0.1.7 by Guido Zuidhof and contributors, MIT License.
+
+EMBERIZA is not affiliated with, or endorsed by, the authors of bacpipe, Google or the BirdNET team.

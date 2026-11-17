@@ -1,0 +1,30 @@
+[project]
+name = "emberiza"
+version = "0.1.0"
+description = "A browser interface for bacpipe: embeddings from Perch 2.0 and BirdNET, explored in your web browser."
+requires-python = ">=3.13"
+# The app's Python (app/py) runs in Pyodide, which provides its packages. This file only sets up the
+# environment for the tests, with the versions Pyodide 314.0.7 provides (ADR 0003).
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "numpy==2.4.6",
+    "scipy==1.18.0",
+    "pandas==3.0.2",
+    "scikit-learn==1.8.0",
+    "soundfile==0.12.1",
+    "soxr==0.5.0.post1",
+    "pyyaml==6.0.3",
+    # Tests only: the model runtime that stands in for ONNX Runtime Web, and the browser driver.
+    "onnxruntime>=1.23",
+    "pytest>=8",
+    "playwright>=1.48",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["app/py"]
+testpaths = ["tests"]

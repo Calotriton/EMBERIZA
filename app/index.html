@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMBERIZA</title>
+<meta name="description" content="A browser interface for bacpipe: embeddings from Perch 2.0 and BirdNET, explored in your web browser. Nothing is uploaded.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="coi-serviceworker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js" crossorigin="anonymous" defer></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./" aria-label="EMBERIZA, start page">
+    <img src="icons/logo.svg" alt="" width="36" height="36">
+    <span class="brand-text"><strong>EMBERIZA</strong><span>Embedding maps for bacpipe</span></span>
+  </a>
+  <div id="engine" class="pill" role="status"><span class="dot" aria-hidden="true"></span><span id="engine-text">Starting</span></div>
+  <nav class="top-actions" aria-label="Page">
+    <a class="quiet" href="https://github.com/bioacoustic-ai/bacpipe" target="_blank" rel="noopener">bacpipe</a>
+    <button id="theme" class="icon-button" type="button" aria-label="Switch between dark and light" title="Dark or light">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </button>
+  </nav>
+</header>
+
+<div id="alert" class="alert" role="alert" hidden></div>
+
+<div class="layout">
+  <!-- ============================== left: what to run ============================== -->
+  <aside class="rail" aria-label="Run settings">
+    <section class="card">
+      <h2><span class="step">1</span>Recordings</h2>
+      <div id="drop" class="drop" tabindex="0" role="button" aria-describedby="drop-hint">
+        <p class="drop-title">Drop a folder of recordings</p>
+        <p id="drop-hint" class="hint">WAV, FLAC, OGG or MP3. The folder is the dataset. Sub-folders are kept. They stay on this computer.</p>
+        <div class="row">
+          <button id="pick-folder" type="button" class="button">Choose folder</button>
+          <button id="pick-files" type="button" class="button quiet-button">Choose files</button>
+        </div>
+        <input id="folder-input" type="file" webkitdirectory multiple hidden>
+        <input id="files-input" type="file" multiple accept=".wav,.WAV,.flac,.ogg,.mp3,.MP3,.aif,.csv" hidden>
+      </div>
+      <dl id="recordings-facts" class="facts" hidden></dl>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">2</span>Models</h2>
+      <div id="models" class="choices"></div>
+      <p class="hint">Each model downloads once and stays in this browser. <a href="#about" data-tab="about">Licences and terms</a></p>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">3</span>Pipeline <span class="file">config.yaml</span></h2>
+      <div id="config-form" class="form"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">4</span>Settings <span class="file">settings.yaml</span></h2>
+      <div id="settings-form"></div>
+      <div class="row spread">
+        <button id="reset-settings" type="button" class="link-button">Back to bacpipe's defaults</button>
+        <button id="export-settings" type="button" class="link-button">Save as YAML</button>
+      </div>
+    </section>
+
+    <div class="run-bar">
+      <button id="run" type="button" class="button primary" disabled>Run bacpipe</button>
+      <button id="stop" type="button" class="button danger" hidden>Stop</button>
+      <p id="run-hint" class="hint">Choose recordings and at least one model.</p>
+    </div>
+  </aside>
+
+  <!-- ============================== right: the work ============================== -->
+  <main class="main">
+    <section id="progress" class="card progress" hidden aria-live="polite">
+      <div class="row spread"><strong id="progress-title">Working</strong><span id="progress-count" class="mono"></span></div>
+      <div class="bar"><div id="progress-bar"></div></div>
+      <p id="progress-detail" class="hint mono"></p>
+    </section>
+
+    <section id="welcome" class="card welcome">
+      <canvas id="constellation" aria-hidden="true"></canvas>
+      <div class="welcome-text">
+        <p class="eyebrow">bacpipe, in a browser tab</p>
+        <h1>See how a model hears your recordings.</h1>
+        <p>EMBERIZA runs <a href="https://github.com/bioacoustic-ai/bacpipe" target="_blank" rel="noopener">bacpipe</a>'s own code on this computer. It turns each few seconds of sound into an <dfn title="A list of numbers a model computes for a sound. Similar sounds get similar numbers.">embedding</dfn> with Perch 2.0 or BirdNET+ V3.0, then maps, clusters and probes those embeddings. There is nothing to install and nothing is uploaded.</p>
+        <ul class="plain">
+          <li><strong>bacpipe's results.</strong> bacpipe's own code makes the result files. The embeddings agree with bacpipe's to within 0.00001.</li>
+          <li><strong>Every bacpipe option.</strong> Both configuration files are on the left, with bacpipe's defaults.</li>
+          <li><strong>Results you can take with you.</strong> One ZIP in bacpipe's folder layout, which bacpipe itself can open.</li>
+        </ul>
+        <div id="saved" hidden>
+          <h3>Saved in this browser</h3>
+          <ul id="saved-list" class="saved-list"></ul>
+        </div>
+        <p class="hint">Made with bacpipe by Kather, Haupert, Ghani and Stowell (2026), <a href="https://doi.org/10.1111/2041-210X.70406" target="_blank" rel="noopener">Methods in Ecology and Evolution</a>. EMBERIZA is an independent interface and is not part of bacpipe.</p>
+        <p class="row">
+          <button id="open-results" type="button" class="button quiet-button">Open a bacpipe results folder</button>
+          <input id="results-input" type="file" webkitdirectory multiple hidden>
+        </p>
+      </div>
+    </section>
+
+    <section id="results" hidden>
+      <div class="tabs" role="tablist" aria-label="Results">
+        <button role="tab" id="tab-explore" data-tab="explore" aria-selected="true">Explore</button>
+        <button role="tab" id="tab-compare" data-tab="compare" aria-selected="false">Compare models</button>
+        <button role="tab" id="tab-predictions" data-tab="predictions" aria-selected="false">Predictions</button>
+        <button role="tab" id="tab-evaluation" data-tab="evaluation" aria-selected="false">Evaluation</button>
+        <button role="tab" id="tab-files" data-tab="files" aria-selected="false">Files</button>
+        <button role="tab" id="tab-log" data-tab="log" aria-selected="false">Log</button>
+        <button role="tab" id="tab-about" data-tab="about" aria-selected="false">About</button>
+      </div>
+
+      <div id="stats" class="stats"></div>
+      <div id="failed" class="alert" hidden></div>
+
+      <!-- Explore: one model -->
+      <div class="panel" id="panel-explore" role="tabpanel" aria-labelledby="tab-explore">
+        <div class="toolbar">
+          <label>Model <select id="ex-model"></select></label>
+          <label>Colour by <select id="ex-label"></select></label>
+          <label class="check" id="ex-annotated-wrap" hidden><input type="checkbox" id="ex-annotated"> Only annotated</label>
+          <label class="check"><input type="checkbox" id="ex-autoplay"> Play on click</label>
+          <span class="grow"></span>
+          <button id="ex-save-selection" type="button" class="button quiet-button" disabled>Save selection</button>
+        </div>
+        <div class="explore">
+          <div class="plot-card card">
+            <div id="ex-plot" class="plot"></div>
+            <p class="hint">Each point is one window of sound. Click a point to hear it. Drag with the lasso to select several.</p>
+          </div>
+          <div class="inspector card">
+            <h3>Selected window</h3>
+            <p id="seg-empty" class="hint">Click a point in the map.</p>
+            <div id="seg" hidden>
+              <p id="seg-title" class="mono"></p>
+              <div id="seg-spec" class="spec"></div>
+              <audio id="seg-audio" controls></audio>
+              <dl id="seg-facts" class="facts tight"></dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compare: all models side by side -->
+      <div class="panel" id="panel-compare" role="tabpanel" aria-labelledby="tab-compare" hidden>
+        <div class="toolbar">
+          <label>Colour by <select id="cmp-label"></select></label>
+          <label class="check" id="cmp-annotated-wrap" hidden><input type="checkbox" id="cmp-annotated"> Only annotated</label>
+        </div>
+        <div id="cmp-grid" class="grid-2"></div>
+        <p class="hint">The same windows in each model's map. Select points in one map to find them in the others.</p>
+      </div>
+
+      <!-- Predictions of the model's own classifier -->
+      <div class="panel" id="panel-predictions" role="tabpanel" aria-labelledby="tab-predictions" hidden>
+        <div class="toolbar">
+          <label>Model <select id="pr-model"></select></label>
+          <label>Group by <select id="pr-by"><option value="file">recording</option><option value="hour">hour of day</option><option value="day" selected>day</option><option value="week">week</option><option value="month">month</option></select></label>
+          <label>Confidence score from <input id="pr-threshold" type="number" min="0" max="1" step="0.05" class="short"></label>
+          <label>Species shown <input id="pr-top" type="number" min="1" max="200" step="1" value="25" class="short"></label>
+        </div>
+        <div class="card"><div id="pr-plot" class="plot tall"></div><p id="pr-note" class="hint"></p></div>
+      </div>
+
+      <!-- Evaluation: clustering and probing -->
+      <div class="panel" id="panel-evaluation" role="tabpanel" aria-labelledby="tab-evaluation" hidden>
+        <div class="grid-2">
+          <div class="card"><h3>Clustering <button class="help" type="button" data-help="clustering" aria-label="About the clustering scores">?</button></h3>
+            <div class="toolbar"><label>Score <select id="ev-metric"><option value="AMI">adjusted mutual information</option><option value="ARI">adjusted Rand index</option></select></label>
+              <label class="check" id="ev-annotated-wrap" hidden><input type="checkbox" id="ev-annotated"> Only annotated windows</label></div>
+            <div id="ev-clust-plot" class="plot"></div><div id="ev-clust-note" class="hint"></div></div>
+          <div class="card"><h3>Probing <button class="help" type="button" data-help="probing" aria-label="About probing">?</button></h3>
+            <div class="toolbar"><label>Probe <select id="ev-probe"><option value="linear">linear</option><option value="knn">kNN</option></select></label></div>
+            <div id="ev-probe-plot" class="plot"></div><div id="ev-probe-note" class="hint"></div></div>
+        </div>
+      </div>
+
+      <!-- Files -->
+      <div class="panel" id="panel-files" role="tabpanel" aria-labelledby="tab-files" hidden>
+        <div class="card">
+          <div class="row spread">
+            <div><h3>bacpipe's result files</h3><p class="hint" id="files-note"></p></div>
+            <div class="row"><button id="download" type="button" class="button primary">Download ZIP</button><button id="delete-results" type="button" class="button quiet-button">Delete from this browser</button></div>
+          </div>
+          <div class="table-box"><table id="files-table"><thead><tr><th>File</th><th class="num">Size</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="panel" id="panel-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+        <div class="card"><h3>bacpipe's log</h3><ol id="log" class="log mono"></ol></div>
+      </div>
+    </section>
+
+    <!-- About is reachable before any results exist -->
+    <section class="panel card about" id="panel-about" role="tabpanel" aria-labelledby="tab-about" hidden>
+      <h2>About EMBERIZA</h2>
+      <p><strong>E</strong>mbedding <strong>M</strong>aps for <strong>B</strong>acpipe: <strong>E</strong>xplore <strong>R</strong>ecordings <strong>I</strong>n a <strong>Z</strong>ero-install <strong>A</strong>pp. <em>Emberiza</em> is the genus of the buntings.</p>
+      <h3>What runs here</h3>
+      <p>The analysis is <a href="https://github.com/bioacoustic-ai/bacpipe" target="_blank" rel="noopener">bacpipe</a> <span id="about-bacpipe" class="mono"></span>: its Python files, unchanged, running in this tab with <a href="https://pyodide.org" target="_blank" rel="noopener">Pyodide</a>. Two things are done differently, because a browser cannot do them bacpipe's way:</p>
+      <ul>
+        <li>The neural networks run in <a href="https://onnxruntime.ai" target="_blank" rel="noopener">ONNX Runtime Web</a>, from the same model files bacpipe downloads.</li>
+        <li>The plots are drawn by this page, from bacpipe's result files, instead of by bacpipe's own dashboard. bacpipe's picture files (PNG) are not made.</li>
+      </ul>
+      <h3>How close to bacpipe</h3>
+      <p>Checked against bacpipe 1.3.5 on recordings at 32 and 48 kHz, mono and stereo:</p>
+      <ul>
+        <li>The audio windows fed to the networks are identical. With ONNX Runtime on a processor, the embeddings, <span class="mono">metadata.yml</span> and the labels are identical too.</li>
+        <li>In this browser the embeddings and the confidence scores agree with bacpipe's to within 0.00001. bacpipe's Raven tables write the confidence times the sample rate as "High Freq (Hz)", so there the same difference reads as a few hundredths of a hertz.</li>
+        <li><strong>UMAP maps are not the same picture.</strong> umap-learn cannot run in a browser, so EMBERIZA has its own copy of the method. It builds the same neighbour graph, and from the same start it ends at the same positions. But the start is computed by another version of SciPy, and umap-learn draws its random numbers from the start's last digits, so the final positions differ. The maps keep neighbours as well as bacpipe's. PCA is the same map.</li>
+        <li>k-means and the linear probe start from unseeded random numbers in bacpipe, so their scores change from run to run in bacpipe too.</li>
+        <li>On Windows, bacpipe 1.3.5 puts the "default classifier" label on the wrong windows when recordings are in sub-folders, because it sorts paths written with "\" and "/" together. EMBERIZA writes paths with "/", as on Linux, and its labels line up with the windows.</li>
+        <li>Apart from that label, the kNN probe and every clustering score without k-means are the same as bacpipe's.</li>
+      </ul>
+      <h3>Not available here</h3>
+      <ul>
+        <li>bacpipe's other 25 models. They need PyTorch or TensorFlow.</li>
+        <li>Recordings longer than the browser's memory allows. A whole recording is read at once, as bacpipe does.</li>
+      </ul>
+      <h3>Credits and licences</h3>
+      <ul id="credits">
+        <li><strong>bacpipe</strong> by Vincent S. Kather, Sylvain Haupert, Burooj Ghani and Dan Stowell. Apache 2.0 licence. Cite: Kather et al. (2026), <em>Methods in Ecology and Evolution</em>, <a href="https://doi.org/10.1111/2041-210X.70406" target="_blank" rel="noopener">doi:10.1111/2041-210X.70406</a>.</li>
+        <li><strong>Perch 2.0</strong> © Google, Apache 2.0 licence. Cite: van Merriënboer et al. (2025), <a href="https://arxiv.org/abs/2508.04665" target="_blank" rel="noopener">arXiv:2508.04665</a>. ONNX conversion by Justin Chu.</li>
+        <li><strong>BirdNET+ V3.0 developer preview</strong> by the BirdNET team (Lasseck, Eibl, Klinck, Kahl), <a href="https://doi.org/10.5281/zenodo.20703646" target="_blank" rel="noopener">doi:10.5281/zenodo.20703646</a>. The model is under CC BY-SA 4.0 with terms of use: it must not be used for poaching or to help capture, harm or trade wildlife illegally, nor for any military purpose. Powered by BirdNET.</li>
+        <li><strong>UMAP</strong> after umap-learn by Leland McInnes and contributors, BSD 3-Clause. Cite: McInnes, Healy and Melville (2018), <a href="https://arxiv.org/abs/1802.03426" target="_blank" rel="noopener">arXiv:1802.03426</a>.</li>
+        <li>Built on Pyodide (MPL 2.0), ONNX Runtime Web (MIT), scikit-learn, SciPy, NumPy and pandas (BSD), libsndfile (LGPL) and soxr (LGPL), Plotly.js (MIT), fflate (MIT) and coi-serviceworker (MIT).</li>
+      </ul>
+      <p class="hint">EMBERIZA is not affiliated with bacpipe's authors, Google or the BirdNET team. It is released under the Apache 2.0 licence. Its code, decisions and the comparison with bacpipe are on <a href="https://github.com/Calotriton/EMBERIZA" target="_blank" rel="noopener">GitHub</a>.</p>
+      <p class="hint mono" id="about-versions"></p>
+    </section>
+  </main>
+</div>
+
+<dialog id="ask">
+  <form method="dialog">
+    <p id="ask-text"></p>
+    <div class="row end"><button value="no" class="button quiet-button" id="ask-no">Keep</button><button value="yes" class="button danger" id="ask-yes">Delete</button></div>
+  </form>
+</dialog>
+<dialog id="help-dialog"><form method="dialog"><h3 id="help-title"></h3><p id="help-text"></p><div class="row end"><button class="button">Close</button></div></form></dialog>
+</body>
+</html>

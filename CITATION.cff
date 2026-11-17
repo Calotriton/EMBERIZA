@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use EMBERIZA, please cite it as below. The results are bacpipe's, so please also cite bacpipe (Kather et al. 2026, doi:10.1111/2041-210X.70406) and the models you ran: Perch 2.0 (van Merriënboer et al. 2025, arXiv:2508.04665) and BirdNET+ V3.0 (doi:10.5281/zenodo.20703646)."
+title: "EMBERIZA: Embedding Maps for Bacpipe, Explore Recordings In a Zero-install App"
+type: software
+authors:
+  - family-names: "López-de Sancha"
+    given-names: "Alejandro"
+version: "0.1.0"
+date-released: "2026-11-17"
+license: Apache-2.0
+repository-code: "https://github.com/Calotriton/EMBERIZA"
+url: "https://calotriton.github.io/EMBERIZA/"
+keywords:
+  - bioacoustics
+  - passive acoustic monitoring
+  - embeddings
+  - bacpipe
+  - Perch
+  - BirdNET
+references:
+  - type: article
+    title: "bacpipe: A Python package to make bioacoustic deep learning models accessible"
+    authors:
+      - family-names: "Kather"
+        given-names: "Vincent S."
+      - family-names: "Haupert"
+        given-names: "Sylvain"
+      - family-names: "Ghani"
+        given-names: "Burooj"
+      - family-names: "Stowell"
+        given-names: "Dan"
+    journal: "Methods in Ecology and Evolution"
+    year: 2026
+    doi: "10.1111/2041-210X.70406"
