@@ -80,6 +80,7 @@ With recordings in sub-folders, bacpipe 1.3.5 on Windows puts the "default class
 - **A bacpipe reference:** `tools/bacpipe_reference.py <audio folder>`, run with bacpipe's own environment. It also downloads the model files into `model/`.
 - **The real page:** `tests/tools/browser_e2e.py <audio folder> <reference folder>` drives it in Edge and compares the ZIP with the reference.
 - **Updating bacpipe:** `tools/vendor_bacpipe.py <clone of bacpipe> [commit]`, then `tools/make_manifest.py`, then the tests.
+- **The logo:** a male reed bunting in pixel art. Its pixels are text maps in `tools/make_logo.py`, which writes `app/icons/logo.svg` and `app/icons/favicon.svg`.
 
 ## Credits
 

@@ -23,7 +23,7 @@ For the look:
 - **Look:** option 1.
   - Colours are tokens in `app/style.css` (`--bg #0b0e13`, `--accent #ff8a4c`, `--cool #5cc8e8`), redefined for `[data-theme="light"]`. Dark is the default. The button in the header switches, and the browser remembers the choice.
   - System fonts only (`system-ui` and `ui-monospace`), so no font is downloaded.
-  - The logo (`app/icons/logo.svg`) is a bunting drawn as a constellation of ember points. It is original and draws on no existing logo.
+  - The logo (`app/icons/logo.svg`) was a bunting drawn as a constellation of ember points. ADR 0007 replaced it with a pixel-art reed bunting.
   - The maps use Plotly's WebGL scatter. The continuous scales and the spectrogram colours are the ones bacpipe's settings name.
   - Motion is switched off for visitors who ask for reduced motion.
 - **bacpipe is credited everywhere it matters:** in the header link, on the welcome card with the paper, in About with the licences, and in the README. Every page that could be mistaken for bacpipe's says "EMBERIZA is an independent interface and is not part of bacpipe".
