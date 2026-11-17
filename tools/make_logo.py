@@ -5,7 +5,12 @@
 Writes app/icons/logo.svg (20 x 20 pixels, shown at 40 px in the header) and app/icons/favicon.svg (16 x 16, for the
 browser tab). Each pixel is a character in the maps below, and each character a colour in PALETTE. With a folder,
 it also writes PNG previews, enlarged and at their real sizes, on the page's dark and light backgrounds.
+
+Browsers keep tab icons in a cache of their own and show the stored one as long as its address is the same. So the
+links in app/index.html carry a fingerprint of each drawing (`favicon.svg?v=...`), and a new drawing gets a new address.
 """
+import hashlib
+import re
 import struct
 import sys
 import zlib
@@ -119,8 +124,15 @@ def png(rows, scale, background):
 
 if __name__ == "__main__":
     logo, favicon = grid(LOGO), grid(FAVICON)
-    (ROOT / "app/icons/logo.svg").write_text(svg(logo, "EMBERIZA"), encoding="utf-8")
-    (ROOT / "app/icons/favicon.svg").write_text(svg(favicon, "EMBERIZA"), encoding="utf-8")
+    page = ROOT / "app/index.html"
+    html = page.read_text(encoding="utf-8")
+    for name, rows in (("logo", logo), ("favicon", favicon)):
+        text = svg(rows, "EMBERIZA")
+        (ROOT / f"app/icons/{name}.svg").write_bytes(text.encode("utf-8"))
+        stamp = hashlib.sha256(text.encode("utf-8")).hexdigest()[:8]
+        html, found = re.subn(rf'icons/{name}\.svg(\?v=\w+)?"', f'icons/{name}.svg?v={stamp}"', html)
+        assert found == 1, f"app/index.html should link icons/{name}.svg once, found {found}"
+    page.write_bytes(html.encode("utf-8"))
     if len(sys.argv) > 1:
         out = Path(sys.argv[1])
         out.mkdir(parents=True, exist_ok=True)
