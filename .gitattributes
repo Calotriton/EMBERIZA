@@ -1,0 +1,5 @@
+# Text files keep LF line endings on every system. The copied bacpipe files are checked by their SHA-256
+# (app/py/bacpipe/VENDORED.json), which a conversion to CRLF on checkout would break.
+* text=auto eol=lf
+*.npz binary
+*.svg text eol=lf
